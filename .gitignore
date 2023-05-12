@@ -1,0 +1,9 @@
+audio
+.ipynb_checkpoints
+concatenated_audio_train
+*.zip
+*.json
+*.csv
+__pycache__/
+experiments/
+*.sw*

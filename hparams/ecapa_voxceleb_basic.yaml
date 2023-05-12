@@ -1,0 +1,134 @@
+# ################################
+# Model: Speaker identification with ECAPA for CryCeleb
+# Authors: David Budaghyan
+# ################################
+
+ckpt_interval_minutes: 15 # save checkpoint every N min
+
+##### SEED
+seed: !PLACEHOLDER
+__set_seed: !apply:crybrain_config_utils.set_seed [!ref <seed>]
+
+# DataLoader
+bs: 16
+train_dataloader_options:
+  batch_size: !ref <bs>
+  shuffle: True
+val_dataloader_options:
+  batch_size: 2
+  shuffle: False
+
+##### ESTIMATOR COMPONENTS
+# Fbank (feature extractor)
+n_mels: 80
+left_frames: 0
+right_frames: 0
+deltas: False
+compute_features: !new:speechbrain.lobes.features.Fbank
+  n_mels: !ref <n_mels>
+  left_frames: !ref <left_frames>
+  right_frames: !ref <right_frames>
+  deltas: !ref <deltas>
+
+# ECAPA
+emb_dim: 192
+embedding_model: !new:speechbrain.lobes.models.ECAPA_TDNN.ECAPA_TDNN
+  input_size: !ref <n_mels>
+  channels: [1024, 1024, 1024, 1024, 3072]
+  kernel_sizes: [5, 3, 3, 3, 1]
+  dilations: [1, 2, 3, 4, 1]
+  groups: [1, 1, 1, 1, 1]
+  attention_channels: 128
+  lin_neurons: !ref <emb_dim>
+
+# If you do not want to use the pretrained encoder you can simply delete pretrained_encoder field.
+pretrained_model_name: spkrec-ecapa-voxceleb
+pretrained_embedding_model_path: !ref speechbrain/<pretrained_model_name>/embedding_model.ckpt
+pretrained_embedding_model: !new:speechbrain.utils.parameter_transfer.Pretrainer
+  collect_in: !ref <experiment_dir>/ckpts
+  loadables:
+    model: !ref <embedding_model>
+  paths:
+    model: !ref <pretrained_embedding_model_path>
+
+# CLASSIFIER
+n_classes: !PLACEHOLDER # check-yaml disable
+
+
+classifier: !new:speechbrain.lobes.models.ECAPA_TDNN.Classifier
+  input_size: !ref <emb_dim>
+  out_neurons: !ref <n_classes>
+
+##### EPOCH COUNTER
+n_epochs: 1000
+epoch_counter: !new:speechbrain.utils.epoch_loop.EpochCounter
+  limit: !ref <n_epochs>
+
+##### OPTIMIZER
+start_lr: 0.0001
+opt_class: !name:torch.optim.Adam
+  lr: !ref <start_lr>
+  weight_decay: 0.000002
+
+#####  LEARNING RATE SCHEDULERS
+lrsched_name: cyclic
+# one of:
+#   onplateau
+#   cyclic
+lr_min: 0.0000000001
+lr_scheduler: !apply:crybrain_config_utils.choose_lrsched
+  lrsched_name: !ref <lrsched_name>
+  #below are kwargs, only the ones relevant to the type of scheduler will be
+  #used for initialization in `choose_lrsched`
+
+  #onplateau (ReduceLROnPlateau)
+  lr_min: !ref <lr_min>
+  factor: 0.4
+  patience: 10
+  dont_halve_until_epoch: 35
+  #cyclic (CyclicLRScheduler)
+  base_lr: 0.00000001
+  max_lr: !ref <start_lr>
+  step_size: 100
+  mode: triangular
+  gamma: 1.0
+  scale_fn: null
+  scale_mode: cycle
+
+sample_rate: 16000
+mean_var_norm: !new:speechbrain.processing.features.InputNormalization
+  norm_type: sentence
+  std_norm: False
+
+modules:
+  compute_features: !ref <compute_features>
+  embedding_model: !ref <embedding_model>
+  classifier: !ref <classifier>
+  mean_var_norm: !ref <mean_var_norm>
+
+compute_cost: !new:speechbrain.nnet.losses.LogSoftmaxWrapper
+  loss_fn: !new:speechbrain.nnet.losses.AdditiveAngularMargin
+    margin: 0.2
+    scale: 30
+
+classification_stats: !name:speechbrain.utils.metric_stats.ClassificationStats
+  ###################################################################
+  ### OUTPUT PATHS ###
+
+
+experiment_name:
+  !PLACEHOLDER # must run from the directory which contains "experiments"
+
+
+experiment_dir: !ref ./experiments/<experiment_name>
+train_logger: !new:speechbrain.utils.train_logger.FileTrainLogger
+  save_file: !ref <experiment_dir>/train_log.txt
+
+checkpointer: !new:speechbrain.utils.checkpoints.Checkpointer
+  checkpoints_dir: !ref <experiment_dir>/ckpts
+  recoverables:
+    embedding_model: !ref <embedding_model>
+    classifier: !ref <classifier>
+    normalizer: !ref <mean_var_norm>
+    counter: !ref <epoch_counter>
+    lr_scheduler: !ref <lr_scheduler>

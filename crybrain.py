@@ -1,33 +1,42 @@
-"""Recipe adapted from.
-
-To run this recipe, use the following command:
-> python train_speaker_embeddings.py {hyperparameter_file}
-
-Using your own hyperparameter file or pre-defined one:
-    hyperparams/ecapa_voxceleb_ft.yaml
+"""Utils for working with cryceleb2023 in SpeechBrain.
 
 Author
     * David Budaghyan 2023
     * Mirco Ravanelli 2020
-    * Hwidong Na 2020
-    * Nauman Dawalatabad 2020
 """
 
-# python train_speaker_embeddings.py hparams/train_ecapa_tdnn.yaml --seed=3011 --split_name=split_by_period_remove_top_50 --target_feature=baby_id
 
 import os
 import pickle
-import random
-import sys
+import zipfile
 
-# from prepare_manifest_jsons import prepare_manifest_jsons
-import numpy as np
 import speechbrain as sb
 import torch
-import torchaudio
-from hyperpyyaml import load_hyperpyyaml
-from speechbrain.utils.data_utils import download_file
-from speechbrain.utils.distributed import run_on_main
+from huggingface_hub import hf_hub_download
+
+
+def download_data(dest="data"):
+
+    if os.path.exists(os.path.join(dest, "audio", "train")):
+        print(
+            f"It appears that data is already downloaded. \nIf you think it should be re-downloaded, remove {dest}/ directory and re-run"
+        )
+        return
+
+    # download data from Huggingface
+    for file_name in ["metadata.csv", "audio.zip", "dev_pairs.csv", "test_pairs.csv", "sample_submission.csv"]:
+
+        hf_hub_download(
+            repo_id="Ubenwa/CryCeleb2023",
+            filename=file_name,
+            local_dir=dest,
+            repo_type="dataset",
+        )
+
+    with zipfile.ZipFile(os.path.join(dest, "audio.zip"), "r") as zip_ref:
+        zip_ref.extractall(dest)
+
+    print("Data downloaded to {dest}/ directory")
 
 
 class CryBrain(sb.core.Brain):

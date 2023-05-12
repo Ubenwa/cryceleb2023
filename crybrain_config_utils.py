@@ -2,7 +2,6 @@ import os
 import random
 
 import numpy as np
-import pandas as pd
 import torch
 from speechbrain.nnet.schedulers import CyclicLRScheduler, ReduceLROnPlateau
 
@@ -47,8 +46,3 @@ def test_cuda_seed():
     print(f"numpy random int: {np.random.randint(100)}")
     print(f"torch random tensor (cpu): {torch.FloatTensor(100).uniform_()}")
     print(f"torch random tensor (cuda): {torch.cuda.FloatTensor(100).uniform_()}")
-
-
-def get_n_classes(split_metadata_path, col_name):
-    df = pd.read_csv(split_metadata_path)
-    return df[col_name].nunique()
