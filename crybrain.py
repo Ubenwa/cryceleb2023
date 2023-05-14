@@ -173,7 +173,12 @@ class CryBrain(sb.core.Brain):
             self.train_log_stats = log_stats
         # Perform end-of-iteration things, like annealing, logging, etc.
         if stage == sb.Stage.VALID:
-            old_lr, new_lr = self.hparams.lr_scheduler(epoch)
+            if self.hparams.lrsched_name == 'onplateau':
+                old_lr, new_lr = self.hparams.lr_scheduler([self.optimizer], 
+                                                           current_epoch=epoch, 
+                                                           current_loss=stage_loss)
+            else:
+                old_lr, new_lr = self.hparams.lr_scheduler(epoch)
             sb.nnet.schedulers.update_learning_rate(self.optimizer, new_lr)
             # LOGGING
             self.hparams.train_logger.log_stats(
