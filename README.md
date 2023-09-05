@@ -4,7 +4,7 @@ All you need to start fine-tuning [SpeechBrain](https://speechbrain.readthedocs.
 
 We hope it will help you get to the next level in [CryCeleb2023 challenge](https://huggingface.co/spaces/competitions/CryCeleb2023)
 
-It also aims to reproduce the [official baseline](https://huggingface.co/Ubenwa/ecapa-voxceleb-ft-cryceleb) model training
+It also reproduces the [official baseline](https://huggingface.co/Ubenwa/ecapa-voxceleb-ft2-cryceleb) model training
 
 `train.ipynb` <a target="_blank" href="https://colab.research.google.com/github/Ubenwa/cryceleb2023/blob/main/train.ipynb">
 <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
