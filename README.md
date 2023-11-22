@@ -23,7 +23,7 @@ Note that default configurations are optimized for speed and simplicity rather t
 ```bibtex
 @article{ubenwa2023cryceleb,
       title={CryCeleb: A Speaker Verification Dataset Based on Infant Cry Sounds},
-      author={David Budaghyan and Arsenii Gorin and Cem Subakan and Charles C. Onu},
+      author={David Budaghyan and Charles C. Onu and Arsenii Gorin and Cem Subakan and Doina Precup},
       year={2023},
       journal={preprint arXiv:2305.00969},
 }
