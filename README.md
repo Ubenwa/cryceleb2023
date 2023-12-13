@@ -18,7 +18,7 @@ Note that default configurations are optimized for speed and simplicity rather t
 
 ## Cite
 
-### CryCeleb
+### CryCeleb (accepted to ICASSP 2024!)
 
 ```bibtex
 @article{ubenwa2023cryceleb,
